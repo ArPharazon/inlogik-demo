@@ -44,8 +44,6 @@ az account set -s ${subscriptionId}
 current_datetime=$(date "+%Y%m%d_%H%M%S")
 deployment_name=main_${current_datetime}
 
-main_$(date '+%Y%m%d_%H%M%S')
-
 # check for any validation errors
 az bicep lint --file ./infra/main.bicep
 
