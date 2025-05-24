@@ -1,3 +1,4 @@
+@minLength(5)
 param appName string
 
 param location string = resourceGroup().location
@@ -28,7 +29,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
 
 // Container Registry
 resource acr 'Microsoft.ContainerRegistry/registries@2025-04-01' = {
-  name: '${appName}acr01'
+  name: '${appName}acr'
   location: location
   sku: {
     name: acrSku
@@ -37,22 +38,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2025-04-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    adminUserEnabled: false
-    publicNetworkAccess: 'Disabled'
-    networkRuleBypassOptions: 'AzureServices'
-    policies: {
-      quarantinePolicy: {
-        status: 'disabled'
-      }
-      retentionPolicy: {
-        days: 7
-        status: 'enabled'
-      }
-      trustPolicy: {
-        status: 'disabled'
-        type: 'Notary'
-      }
-    }
+    adminUserEnabled: true
   }
 }
 
@@ -67,4 +53,3 @@ resource acrKeyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
     principalType: 'ServicePrincipal'
   }
 }
-
