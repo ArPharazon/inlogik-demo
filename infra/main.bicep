@@ -61,18 +61,6 @@ resource registryPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' =
   }
 }
 
-// Role assignment: 'Key Vault Secrets Officer' for adding secrets to Key Vault
-// see: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
-resource acrKeyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: keyVault
-  name: guid(keyVault.id, acr.id, 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7') 
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
-    principalId: acr.identity.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
 // Log Analytics Workspace
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   name: '${appName}-log'
