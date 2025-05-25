@@ -9,6 +9,10 @@ param acrSku string = 'Basic'
 param keyVaultSkuName string = 'standard'
 param logAnalyticsSku string = 'PerGB2018'
 
+// Use the built-in role definitions for Key Vault access
+// see: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
+var keyVaultCertificateUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba')
+
 // Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
   name: '${appName}-kv'
@@ -117,12 +121,11 @@ resource managedEnv 'Microsoft.App/managedEnvironments@2025-01-01' = {
 }
 
 // Managed Environment role assignment: 'Key Vault Certificate User' (to retrieve any certs)
-// see: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
 resource managedEnvKeyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: keyVault
-  name: guid(keyVault.id, managedEnv.id, 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba') 
+  name: guid(keyVault.id, managedEnv.id, keyVaultCertificateUserRoleId) 
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba')
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultCertificateUserRoleId)
     principalId: managedEnv.identity.principalId
     principalType: 'ServicePrincipal'
   }
@@ -153,11 +156,6 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         ]      
       }
       maxInactiveRevisions: 10
-      // registries: [
-      //   {
-      //     server: acr.properties.loginServer
-      //   }
-      // ]
     }
     template: {
       containers: [
