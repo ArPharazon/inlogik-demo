@@ -45,6 +45,22 @@ resource acr 'Microsoft.ContainerRegistry/registries@2025-04-01' = {
   }
 }
 
+resource registryCredentialsSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
+  parent: keyVault
+  name: 'acr-username'
+  properties: {
+    value: acr.listCredentials().username
+  }
+}
+
+resource registryPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
+  parent: keyVault
+  name: 'acr-password'
+  properties: {
+    value: !empty(acr.listCredentials().passwords) ? first(acr.listCredentials().passwords).value : ''
+  }
+}
+
 // Role assignment: 'Key Vault Secrets Officer' for adding secrets to Key Vault
 // see: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
 resource acrKeyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
