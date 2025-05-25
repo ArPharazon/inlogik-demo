@@ -153,11 +153,11 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         ]      
       }
       maxInactiveRevisions: 10
-      registries: [
-        {
-          server: acr.properties.loginServer
-        }
-      ]
+      // registries: [
+      //   {
+      //     server: acr.properties.loginServer
+      //   }
+      // ]
     }
     template: {
       containers: [
