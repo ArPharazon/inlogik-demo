@@ -113,6 +113,9 @@ resource logAnalyticsSecondaryKeySecret 'Microsoft.KeyVault/vaults/secrets@2024-
 resource managedEnv 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: '${appName}-env'
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -122,6 +125,18 @@ resource managedEnv 'Microsoft.App/managedEnvironments@2025-01-01' = {
       }
     }
     zoneRedundant: false
+  }
+}
+
+// Managed Environment role assignment: 'Key Vault Certificate User' (to retrieve any certs)
+// see: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
+resource managedEnvKeyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: keyVault
+  name: guid(keyVault.id, managedEnv.id, 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba') 
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba')
+    principalId: managedEnv.identity.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
