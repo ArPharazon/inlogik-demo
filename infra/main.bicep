@@ -5,6 +5,7 @@ param location string = resourceGroup().location
 
 param acrSku string = 'Basic'
 param keyVaultSkuName string = 'standard'
+param logAnalyticsSku string = 'PerGB2018'
 
 // Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
@@ -51,5 +52,17 @@ resource acrKeyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
     principalId: acr.identity.principalId
     principalType: 'ServicePrincipal'
+  }
+}
+
+// Log Analytics Workspace
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
+  name: '${appName}-log'
+  location: location
+  properties: {
+    sku: {
+      name: logAnalyticsSku
+    }
+    retentionInDays: 30
   }
 }
