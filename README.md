@@ -29,6 +29,8 @@ The bicep template will deploy the following components:
 ```bash
 # replace as needed
 export APP_NAME=<>
+export APP_IMAGE=<>
+export APP_PORT=<>
 export AZURE_RESOURCE_GROUP=<>
 export AZURE_REGION=<>
 
