@@ -1,5 +1,7 @@
 @minLength(5)
 param appName string
+param appImage string
+param appPort string
 
 param location string = resourceGroup().location
 
@@ -64,5 +66,71 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
       name: logAnalyticsSku
     }
     retentionInDays: 30
+  }
+}
+
+// Managed Environment for Container Apps
+resource managedEnv 'Microsoft.App/managedEnvironments@2025-01-01' = {
+  name: '${appName}-env'
+  location: location
+  properties: {
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: {
+        customerId: logAnalytics.properties.customerId
+        sharedKey: logAnalytics.listKeys().primarySharedKey
+      }
+    }
+    zoneRedundant: false
+  }
+}
+
+// Container App
+resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
+  name: '${appName}-app'
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    environmentId: managedEnv.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      ingress: {
+        allowInsecure: false    // secure traffic only
+        clientCertificateMode: 'Ignore'
+        external: true
+        targetPort: int(appPort)
+        transport: 'http'
+        traffic: [
+          {
+            weight: 100         // 100% of traffic to the latest revision
+            latestRevision: true
+          }
+        ]      
+      }
+      maxInactiveRevisions: 10
+      registries: [
+        {
+          server: acr.properties.loginServer
+        }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          name: '${appName}-app'
+          image: appImage
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 0
+        maxReplicas: 3
+      }
+    }
   }
 }
