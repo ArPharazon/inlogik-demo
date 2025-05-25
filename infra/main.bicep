@@ -85,6 +85,30 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   }
 }
 
+resource logAnalyticsWorkspaceId 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
+  parent: keyVault
+  name: 'loganalytics-workspace-id'
+  properties: {
+    value: logAnalytics.id
+  }
+}
+
+resource logAnalyticsPrimaryKeySecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
+  parent: keyVault
+  name: 'loganalytics-primary-key'
+  properties: {
+    value: logAnalytics.listKeys().primarySharedKey
+  }
+}
+
+resource logAnalyticsSecondaryKeySecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
+  parent: keyVault
+  name: 'loganalytics-secondary-key'
+  properties: {
+    value: logAnalytics.listKeys().secondarySharedKey
+  }
+}
+
 // Managed Environment for Container Apps
 resource managedEnv 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: '${appName}-env'
