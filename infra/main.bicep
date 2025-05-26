@@ -175,21 +175,14 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
   properties: {
     environmentId: managedEnv.id
     configuration: {
-      activeRevisionsMode: 'Single'
+      activeRevisionsMode: 'Multiple' // for blue-green deployments
       ingress: {
         allowInsecure: false    // secure traffic only
         clientCertificateMode: 'Ignore'
         external: true
         targetPort: int(appPort)
         transport: 'http'
-        traffic: [
-          {
-            weight: 100         // 100% of traffic to the latest revision
-            latestRevision: true
-          }
-        ]      
       }
-      maxInactiveRevisions: 10
     }
     template: {
       containers: [
