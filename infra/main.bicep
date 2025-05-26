@@ -15,7 +15,13 @@ var tags = {
   description: 'container-apps-demo'
 }
 
-// Use the built-in role definitions for Key Vault access
+// note: using the built-in role definitions
+// see: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/containers#acrpull
+resource acrPullRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: '7f951dda-4ed3-4680-a7ca-43fe172d538d' // AcrPull role definition ID
+}
+
 // see: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
 resource keyVaultCertificateUserRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: subscription()
@@ -209,5 +215,16 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         maxReplicas: 3
       }
     }
+  }
+}
+
+// Role assignment for the Container App to pull images from ACR
+resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: acr
+  name: guid(acr.id, containerApp.id, acrPullRoleDefinition.id)
+  properties: {
+    principalId: containerApp.identity.principalId
+    roleDefinitionId: acrPullRoleDefinition.id
+    principalType: 'ServicePrincipal'
   }
 }
