@@ -127,6 +127,8 @@ resource appInsights 'microsoft.insights/components@2020-02-02' = {
   tags: tags
   properties: {
     Application_Type: 'web'
+    RetentionInDays: 90
+    WorkspaceResourceId: logAnalytics.id
   }
 }
 
