@@ -37,7 +37,7 @@ jobs:
             deploymentName: ${{ github.run_number }}
             resourceGroupName: ${{ secrets.AZURE_RG_NAME }}
             template: ./infra/main.bicep
-            parameters: ./infra/main.bicepparam
+            parameters: ./infra/main.bicepparam --only-show-errors
             deploymentMode: Validate
   
     preview:
