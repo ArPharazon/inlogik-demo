@@ -13,10 +13,17 @@ param logAnalyticsSku string = 'PerGB2018'
 // see: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
 var keyVaultCertificateUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba')
 
+// Tags for resources
+var tags = {
+  environment: 'production'
+  description: 'container-apps-demo'
+}
+
 // Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
   name: '${appName}-kv'
   location: location
+  tags: tags
   properties: {
     tenantId: subscription().tenantId
     sku: {
@@ -44,6 +51,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2025-04-01' = {
   identity: {
     type: 'SystemAssigned'
   }
+  tags: tags
   properties: {
     adminUserEnabled: true
   }
@@ -69,6 +77,7 @@ resource registryPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' =
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   name: '${appName}-log'
   location: location
+  tags: tags
   properties: {
     sku: {
       name: logAnalyticsSku
@@ -108,6 +117,7 @@ resource managedEnv 'Microsoft.App/managedEnvironments@2025-01-01' = {
   identity: {
     type: 'SystemAssigned'
   }
+  tags: tags
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -138,6 +148,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
   identity: {
     type: 'SystemAssigned'
   }
+  tags: tags
   properties: {
     environmentId: managedEnv.id
     configuration: {
