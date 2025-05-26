@@ -1,19 +1,89 @@
 @minLength(5)
 param appName string
+
+@description('The image to deploy in the container app. Must be in the format: <acr-name>.azurecr.io/<image-name>:<tag>')
 param appImage string
+
+@description('The port on which the application listens. Must be a valid port number (1-65535).')
 param appPort string
 
+@description('Location for all resources')
 param location string = resourceGroup().location
 
+@allowed([
+  'Basic'
+  'Classic'
+  'Premium'
+  'Standard'
+])
 param acrSku string = 'Basic'
+
+@description('Number of CPU cores the container can use. Can be with a maximum of two decimals.')
+@allowed([
+  '0.25'
+  '0.5'
+  '0.75'
+  '1'
+  '1.25'
+  '1.5'
+  '1.75'
+  '2'
+])
+param cpuCore string = '0.5'
+
+@description('Amount of memory (in gibibytes, GiB) allocated to the container up to 4GiB. Can be with a maximum of two decimals. Ratio with CPU cores must be equal to 2.')
+@allowed([
+  '0.5'
+  '1'
+  '1.5'
+  '2'
+  '3'
+  '3.5'
+  '4'
+])
+param memorySize string = '1'
+
+@description('Minimum number of replicas that will be deployed')
+@minValue(0)
+@maxValue(3)
+param minReplicas int = 0
+
+@description('Maximum number of replicas that will be deployed')
+@minValue(0)
+@maxValue(25)
+param maxReplicas int = 3
+
+@description('The SKU for the Key Vault. Default is Standard.')
+@allowed([
+  'standard'
+  'premium'
+])
 param keyVaultSkuName string = 'standard'
+
+@description('The SKU for the Log Analytics Workspace. Default is PerGB2018.')
+@allowed([
+  'PerGB2018'
+  'PerNode'
+  'Free'
+])
 param logAnalyticsSku string = 'PerGB2018'
 
-// Tags for resources
+@description('Number of days to retain logs in Log Analytics Workspace. Default is 30 days.')
+@minValue(7)
+param logAnalyticsRetentionDays int = 30
+
+@description('Maximum number of concurrent requests per replica for scaling')
+@minValue(10)
+@maxValue(1000)
+param maxConcurrentRequests int = 100
+
+@description('Tags to apply to all resources')
 var tags = {
   environment: 'production'
   description: 'container-apps-demo'
 }
+
+
 
 // note: using the built-in role definitions
 // see: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/containers#acrpull
@@ -91,7 +161,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
     sku: {
       name: logAnalyticsSku
     }
-    retentionInDays: 30
+    retentionInDays: logAnalyticsRetentionDays
   }
 }
 
@@ -200,14 +270,24 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             }
           ]
           resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
+            cpu: json(cpuCore)
+            memory: '${memorySize}Gi'
           }
         }
       ]
       scale: {
-        minReplicas: 0
-        maxReplicas: 3
+        minReplicas: minReplicas
+        maxReplicas: maxReplicas
+        rules: [
+          {
+            name: 'http-scale-rule'
+            http: {
+              metadata: {
+                concurrentRequests: '${maxConcurrentRequests}'
+              }
+            }
+          }
+        ]
       }
     }
   }
