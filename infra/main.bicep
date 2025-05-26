@@ -113,6 +113,18 @@ resource logAnalyticsSecondaryKeySecret 'Microsoft.KeyVault/vaults/secrets@2024-
   }
 }
 
+// Application Insights
+resource appInsights 'microsoft.insights/components@2020-02-02' = {
+  name: '${appName}-ain'
+  location: location
+  kind: 'web'
+  tags: tags
+  properties: {
+    Application_Type: 'web'
+  }
+}
+
+
 // Managed Environment for Container Apps
 resource managedEnv 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: '${appName}-env'
@@ -176,6 +188,16 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         {
           name: '${appName}-app'
           image: appImage
+          env: [
+            {
+              name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+              value: appInsights.properties.InstrumentationKey
+            }
+            {
+              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+              value: appInsights.properties.ConnectionString
+            }
+          ]
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
